@@ -79,6 +79,13 @@ export async function createChitFund(
   );
 }
 
+export function formatFundState(state: number): string {
+  if (state === 0) return "Pending";
+  if (state === 1) return "Active";
+  if (state === 2) return "Completed";
+  return "Unknown";
+}
+
 export async function joinFund(member: string) {
   return callContract(
     member,
@@ -95,16 +102,14 @@ export async function activateFund(organizer: string) {
   );
 }
 
-export async function getFundSummary() {
+export async function getFundSummary(callerAddress: string) {
   const server = getRpcServer();
   const contract = new Contract(CONTRACT_ID);
 
-  // For a read-only simulation, we can use a dummy account
-  const source = "GA7QYNF7SOWQ3GLR2B6RS22RCFZRT6ZBDFG2ZRXEQMACQES5R4VKDPNC";
-  const account = await server.getAccount(source).catch(() => null);
+  const account = await server.getAccount(callerAddress).catch(() => null);
   
   if (!account) {
-    throw new Error("Could not fetch dummy account for simulation");
+    throw new Error("Could not fetch account for simulation");
   }
 
   const tx = new TransactionBuilder(account, {
@@ -121,7 +126,7 @@ export async function getFundSummary() {
   }
 
   const result = rpc.Api.isSimulationSuccess(simulated) 
-    ? simulated.result.retval 
+    ? simulated.result?.retval 
     : null;
 
   return result ? scValToNative(result) : null;

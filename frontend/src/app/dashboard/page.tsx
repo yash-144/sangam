@@ -13,8 +13,12 @@ export default function DashboardPage() {
 
   useEffect(() => {
     async function fetchFund() {
+      if (!address) {
+        setLoading(false);
+        return;
+      }
       try {
-        const data = await getFundSummary();
+        const data = await getFundSummary(address);
         setSummary(data);
       } catch (err) {
         console.error("Failed to fetch fund:", err);
@@ -23,7 +27,7 @@ export default function DashboardPage() {
       }
     }
     fetchFund();
-  }, []);
+  }, [address]);
 
   return (
     <div className="flex flex-col flex-1 w-full max-w-4xl p-4 mx-auto sm:p-8">
@@ -43,7 +47,7 @@ export default function DashboardPage() {
             <div className="flex justify-between items-start mb-4">
               <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">{summary.config.name}</h2>
               <span className="px-2.5 py-0.5 text-xs font-medium bg-blue-100 text-blue-800 rounded-full dark:bg-blue-900 dark:text-blue-200">
-                {summary.state}
+                {summary.state === 0 ? "Pending" : summary.state === 1 ? "Active" : "Completed"}
               </span>
             </div>
             <div className="space-y-2 text-sm text-zinc-600 dark:text-zinc-400">

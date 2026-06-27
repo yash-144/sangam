@@ -16,9 +16,13 @@ export default function FundDetailPage() {
   const [error, setError] = useState("");
 
   async function fetchFund() {
+    if (!address) {
+      setLoading(false);
+      return;
+    }
     try {
       setLoading(true);
-      const data = await getFundSummary();
+      const data = await getFundSummary(address);
       setSummary(data);
     } catch (err) {
       console.error("Failed to fetch fund:", err);
@@ -29,7 +33,7 @@ export default function FundDetailPage() {
 
   useEffect(() => {
     fetchFund();
-  }, []);
+  }, [address]);
 
   const handleJoin = async () => {
     if (!address) return;
@@ -138,7 +142,7 @@ export default function FundDetailPage() {
         <div className="pt-6 border-t border-zinc-100 dark:border-zinc-800">
           {!isConnected ? (
             <p className="text-sm text-zinc-500 text-center">Connect wallet to interact with this fund.</p>
-          ) : summary.state === "Pending" ? (
+          ) : summary.state === 0 ? (
             <div className="flex gap-4">
               {!isMember && !isFull && (
                 <button
@@ -163,7 +167,9 @@ export default function FundDetailPage() {
               )}
             </div>
           ) : (
-            <p className="text-sm text-zinc-500 text-center">Fund is {summary.state.toLowerCase()}.</p>
+            <p className="text-sm text-zinc-500 text-center">
+              Fund is {summary.state === 1 ? "active" : "completed"}.
+            </p>
           )}
         </div>
       </div>
