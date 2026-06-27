@@ -85,6 +85,14 @@ pub fn get_fund_summary(env: &Env) -> FundSummary {
     get_summary(env)
 }
 
+pub fn get_round_summary(env: &Env, round: u32) -> crate::storage::RoundSummary {
+    crate::storage::RoundSummary {
+        deposit_count: crate::storage::get_deposit_count(env, round),
+        commit_count: crate::storage::get_commit_count(env, round),
+        reveal_count: crate::storage::get_reveal_count(env, round),
+    }
+}
+
 pub fn deposit(env: &Env, member: Address, amount: i128) {
     member.require_auth();
 

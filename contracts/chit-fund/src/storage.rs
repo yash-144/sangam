@@ -31,6 +31,14 @@ pub struct FundSummary {
 }
 
 #[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct RoundSummary {
+    pub deposit_count: u32,
+    pub commit_count: u32,
+    pub reveal_count: u32,
+}
+
+#[contracttype]
 #[derive(Clone, Debug, PartialEq)]
 pub struct MemberRecord {
     pub has_deposited: bool,

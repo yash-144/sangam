@@ -29,6 +29,10 @@ impl ChitFundContract {
         chit_fund::get_fund_summary(&env)
     }
 
+    pub fn get_round_summary(env: Env, round: u32) -> storage::RoundSummary {
+        chit_fund::get_round_summary(&env, round)
+    }
+
     pub fn deposit(env: Env, member: Address, amount: i128) {
         chit_fund::deposit(&env, member, amount);
     }
