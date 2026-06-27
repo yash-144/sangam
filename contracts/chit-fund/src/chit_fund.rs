@@ -1,6 +1,7 @@
-use soroban_sdk::{Address, Env, String, Vec};
+use soroban_sdk::{token, Address, Env, String, Vec};
 use crate::storage::{
     get_summary, set_summary, FundConfig, FundState, FundSummary,
+    get_member_record, set_member_record, get_deposit_count, increment_deposit_count
 };
 
 pub fn create_fund(
@@ -81,4 +82,37 @@ pub fn activate_fund(env: &Env, organizer: Address) {
 
 pub fn get_fund_summary(env: &Env) -> FundSummary {
     get_summary(env)
+}
+
+pub fn deposit(env: &Env, member: Address, amount: i128) {
+    member.require_auth();
+
+    let summary = get_summary(env);
+    if summary.state != FundState::Active {
+        panic!("fund is not active");
+    }
+
+    if amount != summary.config.contribution {
+        panic!("incorrect deposit amount");
+    }
+
+    if !summary.members.contains(&member) {
+        panic!("caller is not a member");
+    }
+
+    let round = summary.current_round;
+    let mut record = get_member_record(env, member.clone(), round);
+
+    if record.has_deposited {
+        panic!("already deposited this round");
+    }
+
+    // Cross-contract call to token
+    let client = token::Client::new(env, &summary.config.token);
+    client.transfer(&member, &env.current_contract_address(), &amount);
+
+    record.has_deposited = true;
+    set_member_record(env, member, round, &record);
+
+    increment_deposit_count(env, round);
 }
