@@ -65,7 +65,7 @@ export async function createChitFund(
   organizer: string,
   token: string,
   name: string,
-  contribution: number,
+  contribution: bigint | number,
   memberCount: number
 ) {
   return callContract(
@@ -93,4 +93,36 @@ export async function activateFund(organizer: string) {
     "activate_fund",
     new Address(organizer).toScVal()
   );
+}
+
+export async function getFundSummary() {
+  const server = getRpcServer();
+  const contract = new Contract(CONTRACT_ID);
+
+  // For a read-only simulation, we can use a dummy account
+  const source = "GA7QYNF7SOWQ3GLR2B6RS22RCFZRT6ZBDFG2ZRXEQMACQES5R4VKDPNC";
+  const account = await server.getAccount(source).catch(() => null);
+  
+  if (!account) {
+    throw new Error("Could not fetch dummy account for simulation");
+  }
+
+  const tx = new TransactionBuilder(account, {
+    fee: "100",
+    networkPassphrase: NETWORK.passphrase,
+  })
+    .addOperation(contract.call("get_fund_summary"))
+    .setTimeout(30)
+    .build();
+
+  const simulated = await server.simulateTransaction(tx);
+  if (rpc.Api.isSimulationError(simulated)) {
+    throw new Error(`Simulation failed: ${simulated.error}`);
+  }
+
+  const result = rpc.Api.isSimulationSuccess(simulated) 
+    ? simulated.result.retval 
+    : null;
+
+  return result ? scValToNative(result) : null;
 }

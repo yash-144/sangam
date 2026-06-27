@@ -78,3 +78,7 @@ pub fn activate_fund(env: &Env, organizer: Address) {
 
     set_summary(env, &summary);
 }
+
+pub fn get_fund_summary(env: &Env) -> FundSummary {
+    get_summary(env)
+}

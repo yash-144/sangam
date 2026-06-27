@@ -23,4 +23,8 @@ impl ChitFundContract {
     pub fn activate_fund(env: Env, organizer: Address) {
         chit_fund::activate_fund(&env, organizer);
     }
+
+    pub fn get_fund_summary(env: Env) -> storage::FundSummary {
+        chit_fund::get_fund_summary(&env)
+    }
 }
