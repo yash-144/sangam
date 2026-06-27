@@ -1,8 +1,9 @@
 #![no_std]
-use soroban_sdk::{contract, contractimpl, Address, Env, String};
+use soroban_sdk::{contract, contractimpl, Address, Env, String, BytesN};
 
 mod storage;
 mod chit_fund;
+mod randomness;
 
 #[cfg(test)]
 mod test;
@@ -30,5 +31,21 @@ impl ChitFundContract {
 
     pub fn deposit(env: Env, member: Address, amount: i128) {
         chit_fund::deposit(&env, member, amount);
+    }
+
+    pub fn commit_hash(env: Env, member: Address, hash: BytesN<32>) {
+        randomness::commit_hash(&env, member, hash);
+    }
+
+    pub fn reveal_hash(env: Env, member: Address, secret: BytesN<32>) {
+        randomness::reveal_hash(&env, member, secret);
+    }
+
+    pub fn claim_pot(env: Env, winner: Address) {
+        chit_fund::claim_pot(&env, winner);
+    }
+
+    pub fn force_complete_round(env: Env, organizer: Address) {
+        chit_fund::force_complete_round(&env, organizer);
     }
 }

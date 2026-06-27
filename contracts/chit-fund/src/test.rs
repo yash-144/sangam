@@ -1,7 +1,7 @@
 #![cfg(test)]
 
 use super::*;
-use soroban_sdk::{testutils::Address as _, Address, Env, String};
+use soroban_sdk::{testutils::Address as _, Address, Env, String, BytesN};
 use crate::storage::{FundState, get_summary};
 
 #[test]
@@ -288,4 +288,72 @@ fn test_deposit_before_activate_fails() {
     client.join_fund(&organizer);
 
     client.deposit(&organizer, &1000);
+}
+
+#[test]
+fn test_commit_reveal_and_claim() {
+    let env = Env::default();
+    env.mock_all_auths();
+
+    let contract_id = env.register_contract(None, ChitFundContract);
+    let client = ChitFundContractClient::new(&env, &contract_id);
+
+    let token_admin = Address::generate(&env);
+    let token_id = env.register_stellar_asset_contract(token_admin.clone());
+    let token_client = soroban_sdk::token::Client::new(&env, &token_id);
+    let token_admin_client = soroban_sdk::token::StellarAssetClient::new(&env, &token_id);
+
+    let organizer = Address::generate(&env);
+    let member2 = Address::generate(&env);
+    
+    // Mint tokens
+    token_admin_client.mint(&organizer, &2000);
+    token_admin_client.mint(&member2, &2000);
+
+    let name = String::from_str(&env, "My Fund");
+    let contribution = 1000;
+    
+    client.create_fund(&organizer, &token_id, &name, &contribution, &2);
+    client.join_fund(&organizer);
+    client.join_fund(&member2);
+    client.activate_fund(&organizer);
+
+    // Deposit phase
+    client.deposit(&organizer, &1000);
+    client.deposit(&member2, &1000);
+
+    // Commit phase
+    let secret1 = BytesN::from_array(&env, &[1u8; 32]);
+    let hash1: BytesN<32> = env.crypto().sha256(&secret1.clone().into()).into();
+    client.commit_hash(&organizer, &hash1);
+
+    let secret2 = BytesN::from_array(&env, &[2u8; 32]);
+    let hash2: BytesN<32> = env.crypto().sha256(&secret2.clone().into()).into();
+    client.commit_hash(&member2, &hash2);
+
+    // Reveal phase
+    client.reveal_hash(&organizer, &secret1);
+    client.reveal_hash(&member2, &secret2);
+
+    // Verify winner was selected
+    let summary = client.get_fund_summary();
+    assert_eq!(summary.past_winners.len(), 1);
+    
+    let winner = summary.past_winners.get(0).unwrap();
+    assert!(winner == organizer || winner == member2);
+
+    // Claim
+    client.claim_pot(&winner);
+
+    // Verify balances
+    assert_eq!(token_client.balance(&contract_id), 0);
+    if winner == organizer {
+        assert_eq!(token_client.balance(&organizer), 3000); // 2000 - 1000 + 2000
+    } else {
+        assert_eq!(token_client.balance(&member2), 3000);
+    }
+
+    // Verify round advanced
+    let summary2 = client.get_fund_summary();
+    assert_eq!(summary2.current_round, 2);
 }
