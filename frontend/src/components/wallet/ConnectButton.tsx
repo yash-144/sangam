@@ -3,7 +3,7 @@
 import { useWallet } from "./WalletProvider";
 
 export function ConnectButton() {
-  const { isConnected, isConnecting, address, connect, disconnect } = useWallet();
+  const { isConnected, address, disconnect } = useWallet();
 
   if (isConnected && address) {
     return (

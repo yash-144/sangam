@@ -1,6 +1,40 @@
-import { Contract, TransactionBuilder, rpc, xdr, Address, scValToNative, nativeToScVal, hash } from "@stellar/stellar-sdk";
+import { Contract, TransactionBuilder, rpc, xdr, Address, scValToNative, nativeToScVal } from "@stellar/stellar-sdk";
 import { StellarWalletsKit } from "@creit-tech/stellar-wallets-kit";
 import { NETWORK, CONTRACT_ID, getRpcServer } from "./stellar";
+
+const TESTNET_PASSPHRASE = "Test SDF Network ; September 2015";
+
+function wait(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function isAccountNotFoundError(error: unknown) {
+  return error instanceof Error && error.message.includes("Account not found");
+}
+
+async function fundTestnetAccount(address: string) {
+  if (NETWORK.passphrase !== TESTNET_PASSPHRASE) {
+    throw new Error("Connected wallet account was not found on the configured Stellar network.");
+  }
+
+  const response = await fetch(`https://friendbot.stellar.org?addr=${encodeURIComponent(address)}`);
+  if (!response.ok) {
+    throw new Error("Connected testnet wallet is not funded yet, and Friendbot could not fund it. Please fund it from the Stellar testnet Friendbot and try again.");
+  }
+
+  await wait(3000);
+}
+
+async function getAccountWithTestnetFunding(server: rpc.Server, address: string) {
+  try {
+    return await server.getAccount(address);
+  } catch (error) {
+    if (!isAccountNotFoundError(error)) throw error;
+
+    await fundTestnetAccount(address);
+    return server.getAccount(address);
+  }
+}
 
 async function callContract(
   callerAddress: string,
@@ -10,7 +44,7 @@ async function callContract(
   const server = getRpcServer();
   
   // 1. Get the account sequence number
-  const account = await server.getAccount(callerAddress);
+  const account = await getAccountWithTestnetFunding(server, callerAddress);
   const contract = new Contract(CONTRACT_ID);
 
   // 2. Build the transaction
@@ -29,10 +63,10 @@ async function callContract(
   }
 
   // 4. Re-fetch account for a fresh sequence number (avoids txBadSeq after prior txs)
-  const freshAccount = await server.getAccount(callerAddress);
+  const freshAccount = await getAccountWithTestnetFunding(server, callerAddress);
 
   // 5. Re-build the transaction with the fresh account + simulation footprint
-  const resourceFee = simulated.minResourceFee ? (BigInt(simulated.minResourceFee) + 100000n).toString() : "1000";
+  const resourceFee = simulated.minResourceFee ? (BigInt(simulated.minResourceFee) + BigInt(100000)).toString() : "1000";
   const freshTx = new TransactionBuilder(freshAccount, {
     fee: resourceFee,
     networkPassphrase: NETWORK.passphrase,
@@ -85,7 +119,7 @@ export async function createChitFund(
   contribution: bigint | number,
   memberCount: number
 ) {
-  const { status, simulated } = await callContract(
+  const { simulated } = await callContract(
     organizer,
     "create_fund",
     new Address(organizer).toScVal(),
@@ -131,7 +165,7 @@ export async function getFundSummary(callerAddress: string, fundId: number) {
   const server = getRpcServer();
   const contract = new Contract(CONTRACT_ID);
 
-  const account = await server.getAccount(callerAddress).catch(() => null);
+  const account = await getAccountWithTestnetFunding(server, callerAddress).catch(() => null);
   
   if (!account) {
     throw new Error("Could not fetch account for simulation");
@@ -157,7 +191,7 @@ export async function getFundSummary(callerAddress: string, fundId: number) {
     ? simulated.result?.retval 
     : null;
 
-  return result ? scValToNative(result) : null;
+  return result ? normalizeFundSummary(scValToNative(result)) : null;
 }
 
 export async function deposit(member: string, fundId: number, amount: bigint | number) {
@@ -212,11 +246,62 @@ export async function claimPot(winner: string, fundId: number) {
   );
 }
 
+export interface FundConfig {
+  organizer: string;
+  token: string;
+  name: string;
+  contribution: bigint;
+  member_count: number;
+}
+
 export interface FundSummary {
   config: FundConfig;
   state: ['Pending' | 'Active' | 'Completed'];
   members: string[];
   current_round: number;
+  past_winners: string[];
+}
+
+function normalizeAddress(value: unknown): string {
+  if (typeof value === "string") return value;
+  if (value && typeof value === "object" && "toString" in value && typeof value.toString === "function") {
+    return value.toString();
+  }
+  return String(value);
+}
+
+function normalizeState(value: unknown): ['Pending' | 'Active' | 'Completed'] {
+  if (Array.isArray(value) && typeof value[0] === "string") {
+    return [value[0] as 'Pending' | 'Active' | 'Completed'];
+  }
+  if (typeof value === "string") {
+    return [value as 'Pending' | 'Active' | 'Completed'];
+  }
+  return ["Pending"];
+}
+
+function normalizeFundSummary(raw: unknown): FundSummary {
+  const data = raw as {
+    config?: Partial<FundConfig>;
+    state?: unknown;
+    members?: unknown[];
+    current_round?: number;
+    past_winners?: unknown[];
+  };
+
+  return {
+    config: {
+      organizer: normalizeAddress(data.config?.organizer ?? ""),
+      token: normalizeAddress(data.config?.token ?? ""),
+      name: String(data.config?.name ?? ""),
+      contribution: BigInt(data.config?.contribution ?? 0),
+      member_count: Number(data.config?.member_count ?? 0),
+    },
+    state: normalizeState(data.state),
+    members: (data.members ?? []).map(normalizeAddress),
+    current_round: Number(data.current_round ?? 0),
+    past_winners: (data.past_winners ?? []).map(normalizeAddress),
+  };
 }
 
 export interface RoundSummary {
@@ -229,7 +314,7 @@ export async function getRoundSummary(callerAddress: string, fundId: number, rou
   const server = getRpcServer();
   const contract = new Contract(CONTRACT_ID);
 
-  const account = await server.getAccount(callerAddress).catch(() => null);
+  const account = await getAccountWithTestnetFunding(server, callerAddress).catch(() => null);
   
   if (!account) {
     throw new Error("Could not fetch account for simulation");
@@ -256,4 +341,50 @@ export async function getRoundSummary(callerAddress: string, fundId: number, rou
     : null;
 
   return result ? scValToNative(result) as unknown as RoundSummary : null;
+}
+
+export interface MemberStatus {
+  has_deposited: boolean;
+  has_committed: boolean;
+  has_revealed: boolean;
+}
+
+export async function getMemberStatus(
+  callerAddress: string,
+  fundId: number,
+  member: string,
+  round: number
+): Promise<MemberStatus> {
+  const server = getRpcServer();
+  const contract = new Contract(CONTRACT_ID);
+
+  const account = await getAccountWithTestnetFunding(server, callerAddress).catch(() => null);
+  if (!account) {
+    return { has_deposited: false, has_committed: false, has_revealed: false };
+  }
+
+  const tx = new TransactionBuilder(account, {
+    fee: "100",
+    networkPassphrase: NETWORK.passphrase,
+  })
+    .addOperation(contract.call(
+      "get_member_status",
+      nativeToScVal(fundId, { type: "u64" }),
+      new Address(member).toScVal(),
+      nativeToScVal(round, { type: "u32" })
+    ))
+    .setTimeout(30)
+    .build();
+
+  const simulated = await server.simulateTransaction(tx);
+  if (rpc.Api.isSimulationError(simulated)) {
+    return { has_deposited: false, has_committed: false, has_revealed: false };
+  }
+
+  const result = rpc.Api.isSimulationSuccess(simulated)
+    ? simulated.result?.retval
+    : null;
+
+  return result ? scValToNative(result) as unknown as MemberStatus
+    : { has_deposited: false, has_committed: false, has_revealed: false };
 }

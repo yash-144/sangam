@@ -29,16 +29,19 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     });
 
     useEffect(() => {
-        // Restore saved address from localStorage on mount
-        const savedAddress = localStorage.getItem("cf_wallet_address");
-        if (savedAddress) {
+        const timer = window.setTimeout(() => {
+            const savedAddress = window.localStorage.getItem("cf_wallet_address");
+            if (!savedAddress) return;
+
             StellarWalletsKit.setWallet("freighter");
             setState((prev) => ({
                 ...prev,
                 address: savedAddress,
                 isConnected: true,
             }));
-        }
+        }, 0);
+
+        return () => window.clearTimeout(timer);
     }, []);
 
     const connect = async () => {
