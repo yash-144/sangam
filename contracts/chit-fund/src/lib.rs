@@ -54,4 +54,8 @@ impl ChitFundContract {
     pub fn get_round_summary(env: Env, fund_id: u64, round: u32) -> storage::RoundSummary {
         chit_fund::get_round_summary(&env, fund_id, round)
     }
+
+    pub fn get_member_status(env: Env, fund_id: u64, member: Address, round: u32) -> storage::MemberStatus {
+        storage::get_member_status(&env, fund_id, member, round)
+    }
 }

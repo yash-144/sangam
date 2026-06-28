@@ -47,6 +47,14 @@ pub struct MemberRecord {
 }
 
 #[contracttype]
+#[derive(Clone, Debug, PartialEq)]
+pub struct MemberStatus {
+    pub has_deposited: bool,
+    pub has_committed: bool,
+    pub has_revealed: bool,
+}
+
+#[contracttype]
 #[derive(Clone)]
 pub enum DataKey {
     NextFundId,
@@ -98,6 +106,15 @@ pub fn set_member_record(env: &Env, fund_id: u64, member: Address, round: u32, r
     let key = DataKey::MemberRecord(fund_id, member, round);
     env.storage().persistent().set(&key, record);
     env.storage().persistent().extend_ttl(&key, BUMP_AMOUNT, BUMP_AMOUNT);
+}
+
+pub fn get_member_status(env: &Env, fund_id: u64, member: Address, round: u32) -> MemberStatus {
+    let record = get_member_record(env, fund_id, member, round);
+    MemberStatus {
+        has_deposited: record.has_deposited,
+        has_committed: record.commitment.is_some(),
+        has_revealed: record.reveal.is_some(),
+    }
 }
 
 pub fn get_deposit_count(env: &Env, fund_id: u64, round: u32) -> u32 {
