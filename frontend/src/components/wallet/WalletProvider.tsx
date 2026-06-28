@@ -32,6 +32,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         // Restore saved address from localStorage on mount
         const savedAddress = localStorage.getItem("cf_wallet_address");
         if (savedAddress) {
+            StellarWalletsKit.setWallet("freighter");
             setState((prev) => ({
                 ...prev,
                 address: savedAddress,
