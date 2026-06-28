@@ -2,7 +2,7 @@ use soroban_sdk::{token, Address, Env, String, Vec};
 use crate::storage::{
     get_summary, set_summary, FundConfig, FundState, FundSummary,
     get_member_record, set_member_record, get_deposit_count, increment_deposit_count,
-    reset_accumulator
+    reset_accumulator, get_next_fund_id, increment_next_fund_id
 };
 
 pub fn create_fund(
@@ -12,7 +12,7 @@ pub fn create_fund(
     name: String,
     contribution: i128,
     member_count: u32,
-) {
+) -> u64 {
     organizer.require_auth();
 
     if member_count < 2 || member_count > 10 {
@@ -23,28 +23,34 @@ pub fn create_fund(
     }
 
     let config = FundConfig {
-        organizer,
+        organizer: organizer.clone(),
         token,
         contribution,
         member_count,
         name,
     };
 
+    let mut members = Vec::new(env);
+    members.push_back(organizer.clone());
+
     let summary = FundSummary {
         config,
         state: FundState::Pending,
         current_round: 0,
-        members: Vec::new(env),
+        members,
         past_winners: Vec::new(env),
     };
 
-    set_summary(env, &summary);
+    let fund_id = increment_next_fund_id(env);
+    set_summary(env, fund_id, &summary);
+    
+    fund_id
 }
 
-pub fn join_fund(env: &Env, member: Address) {
+pub fn join_fund(env: &Env, fund_id: u64, member: Address) {
     member.require_auth();
 
-    let mut summary = get_summary(env);
+    let mut summary = get_summary(env, fund_id);
 
     if summary.state != FundState::Pending {
         panic!("fund state is not Pending");
@@ -57,13 +63,13 @@ pub fn join_fund(env: &Env, member: Address) {
     }
 
     summary.members.push_back(member);
-    set_summary(env, &summary);
+    set_summary(env, fund_id, &summary);
 }
 
-pub fn activate_fund(env: &Env, organizer: Address) {
+pub fn activate_fund(env: &Env, fund_id: u64, organizer: Address) {
     organizer.require_auth();
 
-    let mut summary = get_summary(env);
+    let mut summary = get_summary(env, fund_id);
 
     if summary.config.organizer != organizer {
         panic!("only organizer can activate");
@@ -78,25 +84,25 @@ pub fn activate_fund(env: &Env, organizer: Address) {
     summary.state = FundState::Active;
     summary.current_round = 1;
 
-    set_summary(env, &summary);
+    set_summary(env, fund_id, &summary);
 }
 
-pub fn get_fund_summary(env: &Env) -> FundSummary {
-    get_summary(env)
+pub fn get_fund_summary(env: &Env, fund_id: u64) -> FundSummary {
+    get_summary(env, fund_id)
 }
 
-pub fn get_round_summary(env: &Env, round: u32) -> crate::storage::RoundSummary {
+pub fn get_round_summary(env: &Env, fund_id: u64, round: u32) -> crate::storage::RoundSummary {
     crate::storage::RoundSummary {
-        deposit_count: crate::storage::get_deposit_count(env, round),
-        commit_count: crate::storage::get_commit_count(env, round),
-        reveal_count: crate::storage::get_reveal_count(env, round),
+        deposit_count: crate::storage::get_deposit_count(env, fund_id, round),
+        commit_count: crate::storage::get_commit_count(env, fund_id, round),
+        reveal_count: crate::storage::get_reveal_count(env, fund_id, round),
     }
 }
 
-pub fn deposit(env: &Env, member: Address, amount: i128) {
+pub fn deposit(env: &Env, fund_id: u64, member: Address, amount: i128) {
     member.require_auth();
 
-    let summary = get_summary(env);
+    let summary = get_summary(env, fund_id);
     if summary.state != FundState::Active {
         panic!("fund is not active");
     }
@@ -110,7 +116,7 @@ pub fn deposit(env: &Env, member: Address, amount: i128) {
     }
 
     let round = summary.current_round;
-    let mut record = get_member_record(env, member.clone(), round);
+    let mut record = get_member_record(env, fund_id, member.clone(), round);
 
     if record.has_deposited {
         panic!("already deposited this round");
@@ -121,15 +127,15 @@ pub fn deposit(env: &Env, member: Address, amount: i128) {
     client.transfer(&member, &env.current_contract_address(), &amount);
 
     record.has_deposited = true;
-    set_member_record(env, member, round, &record);
+    set_member_record(env, fund_id, member, round, &record);
 
-    increment_deposit_count(env, round);
+    increment_deposit_count(env, fund_id, round);
 }
 
-pub fn claim_pot(env: &Env, winner: Address) {
+pub fn claim_pot(env: &Env, fund_id: u64, winner: Address) {
     winner.require_auth();
 
-    let mut summary = get_summary(env);
+    let mut summary = get_summary(env, fund_id);
     if summary.state != FundState::Active {
         panic!("fund is not active");
     }
@@ -144,24 +150,24 @@ pub fn claim_pot(env: &Env, winner: Address) {
         panic!("not the winner");
     }
 
-    let pot = summary.config.contribution * (summary.config.member_count as i128);
     let client = token::Client::new(env, &summary.config.token);
+    let pot = client.balance(&env.current_contract_address());
     client.transfer(&env.current_contract_address(), &winner, &pot);
 
     if round < summary.config.member_count {
         summary.current_round += 1;
-        reset_accumulator(env);
+        reset_accumulator(env, fund_id);
     } else {
         summary.state = FundState::Completed;
     }
 
-    set_summary(env, &summary);
+    set_summary(env, fund_id, &summary);
 }
 
-pub fn force_complete_round(env: &Env, organizer: Address) {
+pub fn force_complete_round(env: &Env, fund_id: u64, organizer: Address) {
     organizer.require_auth();
 
-    let mut summary = get_summary(env);
+    let mut summary = get_summary(env, fund_id);
     if summary.config.organizer != organizer {
         panic!("only organizer can force complete");
     }
@@ -169,15 +175,13 @@ pub fn force_complete_round(env: &Env, organizer: Address) {
         panic!("fund is not active");
     }
 
-    // In a real implementation, you would calculate actual deposits and distribute to a winner.
-    // For this plan, we just advance or complete.
     let round = summary.current_round;
     if round < summary.config.member_count {
         summary.current_round += 1;
-        reset_accumulator(env);
+        reset_accumulator(env, fund_id);
     } else {
         summary.state = FundState::Completed;
     }
 
-    set_summary(env, &summary);
+    set_summary(env, fund_id, &summary);
 }
