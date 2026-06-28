@@ -1,22 +1,23 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Fraunces, Inter } from "next/font/google";
 import "./globals.css";
 import { WalletProvider } from "@/components/wallet/WalletProvider";
-import { ConnectButton } from "@/components/wallet/ConnectButton";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const fraunces = Fraunces({
+  variable: "--font-fraunces",
   subsets: ["latin"],
+  display: "swap",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "ChitFund",
-  description: "Trustless Group Savings on Stellar",
+  title: "Chit — Trustless Group Savings",
+  description: "Save together. Win together. A trustless group savings pool built on Stellar.",
 };
 
 export default function RootLayout({
@@ -27,17 +28,12 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${fraunces.variable} ${inter.variable}`}
       suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col">
+      <body>
         <WalletProvider>
-          <div className="absolute top-4 right-4">
-            <ConnectButton />
-          </div>
-          <main className="flex-1 flex flex-col pt-20">
-            {children}
-          </main>
+          {children}
         </WalletProvider>
       </body>
     </html>
