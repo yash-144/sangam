@@ -9,7 +9,8 @@ function wait(ms: number) {
 }
 
 function isAccountNotFoundError(error: unknown) {
-  return error instanceof Error && error.message.includes("Account not found");
+  const message = error instanceof Error ? error.message : String(error);
+  return message.includes("Account not found") || message.includes("not found");
 }
 
 async function fundTestnetAccount(address: string) {
@@ -32,7 +33,16 @@ async function getAccountWithTestnetFunding(server: rpc.Server, address: string)
     if (!isAccountNotFoundError(error)) throw error;
 
     await fundTestnetAccount(address);
-    return server.getAccount(address);
+    for (let attempt = 0; attempt < 5; attempt++) {
+      try {
+        return await server.getAccount(address);
+      } catch (retryError) {
+        if (!isAccountNotFoundError(retryError) || attempt === 4) throw retryError;
+        await wait(2000);
+      }
+    }
+
+    throw error;
   }
 }
 
@@ -80,7 +90,7 @@ async function callContract(
   // 6. Sign with wallet
   const { signedTxXdr } = await StellarWalletsKit.signTransaction(
     prepared.toXDR(),
-    { networkPassphrase: NETWORK.passphrase }
+    { networkPassphrase: NETWORK.passphrase, address: callerAddress }
   );
 
   // 7. Submit
@@ -168,7 +178,7 @@ export async function getFundSummary(callerAddress: string, fundId: number) {
   const account = await getAccountWithTestnetFunding(server, callerAddress).catch(() => null);
   
   if (!account) {
-    throw new Error("Could not fetch account for simulation");
+    return null;
   }
 
   const tx = new TransactionBuilder(account, {
@@ -317,7 +327,7 @@ export async function getRoundSummary(callerAddress: string, fundId: number, rou
   const account = await getAccountWithTestnetFunding(server, callerAddress).catch(() => null);
   
   if (!account) {
-    throw new Error("Could not fetch account for simulation");
+    return null;
   }
 
   const tx = new TransactionBuilder(account, {

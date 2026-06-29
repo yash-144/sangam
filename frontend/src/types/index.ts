@@ -3,4 +3,5 @@ export interface WalletState {
     isConnecting: boolean;
     isConnected: boolean;
     network: string | null;
+    connectionError: string | null;
 }
