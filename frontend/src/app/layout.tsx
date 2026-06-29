@@ -1,13 +1,7 @@
 import type { Metadata } from "next";
-import { Fraunces, Inter } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
 import { WalletProvider } from "@/components/wallet/WalletProvider";
-
-const fraunces = Fraunces({
-  variable: "--font-fraunces",
-  subsets: ["latin"],
-  display: "swap",
-});
 
 const inter = Inter({
   variable: "--font-inter",
@@ -16,8 +10,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Chit — Trustless Group Savings",
-  description: "Save together. Win together. A trustless group savings pool built on Stellar.",
+  title: "chitfund. — Trustless Rotating Savings",
+  description: "A smart contract holds the money. Not a person. Trustless chit funds on Stellar.",
 };
 
 export default function RootLayout({
@@ -28,7 +22,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${fraunces.variable} ${inter.variable}`}
+      className={inter.variable}
       suppressHydrationWarning
     >
       <body>
