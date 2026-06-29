@@ -1,8 +1,8 @@
 use soroban_sdk::{token, Address, Env, String, Vec};
 use crate::storage::{
     get_summary, set_summary, FundConfig, FundState, FundSummary,
-    get_member_record, set_member_record, get_deposit_count, increment_deposit_count,
-    reset_accumulator, get_next_fund_id, increment_next_fund_id
+    get_member_record, set_member_record, increment_deposit_count,
+    reset_accumulator, increment_next_fund_id
 };
 
 pub fn create_fund(
@@ -154,28 +154,6 @@ pub fn claim_pot(env: &Env, fund_id: u64, winner: Address) {
     let pot = client.balance(&env.current_contract_address());
     client.transfer(&env.current_contract_address(), &winner, &pot);
 
-    if round < summary.config.member_count {
-        summary.current_round += 1;
-        reset_accumulator(env, fund_id);
-    } else {
-        summary.state = FundState::Completed;
-    }
-
-    set_summary(env, fund_id, &summary);
-}
-
-pub fn force_complete_round(env: &Env, fund_id: u64, organizer: Address) {
-    organizer.require_auth();
-
-    let mut summary = get_summary(env, fund_id);
-    if summary.config.organizer != organizer {
-        panic!("only organizer can force complete");
-    }
-    if summary.state != FundState::Active {
-        panic!("fund is not active");
-    }
-
-    let round = summary.current_round;
     if round < summary.config.member_count {
         summary.current_round += 1;
         reset_accumulator(env, fund_id);
