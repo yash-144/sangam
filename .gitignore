@@ -16,5 +16,8 @@ frontend/out/
 .DS_Store
 Thumbs.db
 
-# Plan (local only, never commit)
 plan.md
+
+frontend/test-simulate.mjs
+pnpm-install.log
+cf-prototype.html
