@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 import { WalletProvider } from "@/components/wallet/WalletProvider";
 
@@ -29,6 +30,7 @@ export default function RootLayout({
         <WalletProvider>
           {children}
         </WalletProvider>
+        <Analytics />
       </body>
     </html>
   );
