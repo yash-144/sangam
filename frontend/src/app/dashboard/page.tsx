@@ -517,9 +517,6 @@ export default function DashboardPage() {
                 <span className={`badge ${stateName === "Active" ? "badge-active" : stateName === "Pending" ? "badge-pending" : "badge-completed"}`}>
                   {stateName}
                 </span>
-                {showInviteCode && (
-                  <span style={{ fontSize: "var(--text-sm)", color: "var(--muted-fg)", fontFamily: "monospace" }}>Code {inviteCode}</span>
-                )}
               </div>
             )}
           </div>
@@ -598,13 +595,12 @@ export default function DashboardPage() {
             <div className="grid grid-cols-1 gap-8">
 
               {/* Stats row */}
-              <div className="grid-panel grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5">
+              <div className="grid-panel grid grid-cols-2 md:grid-cols-4">
                 {[
                   { label: "Pot Size", value: `${stroopsToDisplay(potAmount)} USDC` },
                   { label: "Round", value: `${currentRound} / ${summary.config.member_count}` },
                   { label: "Members", value: `${summary.members.length} / ${summary.config.member_count}` },
                   { label: "Contribution", value: `${stroopsToDisplay(summary.config.contribution)} USDC` },
-                  ...(showInviteCode ? [{ label: "Invite Code", value: inviteCode }] : []),
                 ].map((s) => (
                   <div key={s.label} style={{ padding: "1.5rem 1.75rem" }}>
                     <p style={{ fontSize: "var(--text-xs)", color: "var(--muted-fg)", marginBottom: "0.5rem", letterSpacing: "var(--tracking-wide)", textTransform: "uppercase", fontWeight: 500 }}>{s.label}</p>
