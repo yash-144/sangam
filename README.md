@@ -12,7 +12,7 @@ A decentralized, trustless ROSCA (Rotating Savings and Credit Association) built
 
 The smart contract is currently deployed on the Stellar Testnet.
 
-- **Contract ID:** `CDYUCH4EZ5L5U7WT7GFI6EGB5PCD6W3RE7V6W3USLQKBNKFG2POGG2N5`
+- **Contract ID:** `CCHSYVP3YPWVVUCG6EPS2WTYPF4L6TLRXF4ZS7Z62PIEF5OIQJ36TMTR`
 - **Asset ID (Dummy USDC):** `CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC`
 
 ## Project Structure
