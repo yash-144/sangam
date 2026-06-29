@@ -26,6 +26,8 @@ async function fundTestnetAccount(address: string) {
   await wait(3000);
 }
 
+// Write path: caller is about to submit a transaction, so an unfunded
+// testnet account is a hard blocker — fund via friendbot and retry.
 async function getAccountWithTestnetFunding(server: rpc.Server, address: string) {
   try {
     return await server.getAccount(address);
@@ -42,6 +44,19 @@ async function getAccountWithTestnetFunding(server: rpc.Server, address: string)
       }
     }
 
+    throw error;
+  }
+}
+
+// Read path: contract simulation needs *some* funded account for the
+// envelope, but we never broadcast the tx. Return null on "not found"
+// so callers can short-circuit — friendbot only runs when the user
+// actually attempts a write (see getAccountWithTestnetFunding).
+async function tryGetAccount(server: rpc.Server, address: string) {
+  try {
+    return await server.getAccount(address);
+  } catch (error) {
+    if (isAccountNotFoundError(error)) return null;
     throw error;
   }
 }
@@ -175,8 +190,7 @@ export async function getFundSummary(callerAddress: string, fundId: number) {
   const server = getRpcServer();
   const contract = new Contract(CONTRACT_ID);
 
-  const account = await getAccountWithTestnetFunding(server, callerAddress).catch(() => null);
-  
+  const account = await tryGetAccount(server, callerAddress);
   if (!account) {
     return null;
   }
@@ -324,8 +338,7 @@ export async function getRoundSummary(callerAddress: string, fundId: number, rou
   const server = getRpcServer();
   const contract = new Contract(CONTRACT_ID);
 
-  const account = await getAccountWithTestnetFunding(server, callerAddress).catch(() => null);
-  
+  const account = await tryGetAccount(server, callerAddress);
   if (!account) {
     return null;
   }
@@ -368,7 +381,7 @@ export async function getMemberStatus(
   const server = getRpcServer();
   const contract = new Contract(CONTRACT_ID);
 
-  const account = await getAccountWithTestnetFunding(server, callerAddress).catch(() => null);
+  const account = await tryGetAccount(server, callerAddress);
   if (!account) {
     return { has_deposited: false, has_committed: false, has_revealed: false };
   }
