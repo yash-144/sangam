@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useInView } from "@/hooks/useInView";
 
 const steps = [
   { num: "01", title: "Create", desc: "Set contribution amount and group size. Deploy in one click." },
@@ -11,17 +11,7 @@ const steps = [
 ];
 
 export default function HowItWorks() {
-  const ref = useRef<HTMLElement>(null);
-  const [visible, setVisible] = useState(false);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) setVisible(true); },
-      { rootMargin: "-80px" }
-    );
-    if (ref.current) observer.observe(ref.current);
-    return () => observer.disconnect();
-  }, []);
+  const [ref, visible] = useInView<HTMLElement>();
 
   return (
     <section id="how-it-works" ref={ref} style={{ padding: "var(--space-section) 0" }}>
@@ -57,7 +47,7 @@ export default function HowItWorks() {
             >
               <span style={{
                 fontSize: "var(--text-sm)",
-                fontFamily: "monospace",
+                fontFamily: "var(--font-mono)",
                 color: "var(--accent)",
                 display: "block",
                 marginBottom: "1.25rem",
