@@ -326,4 +326,4 @@ Until one of those exists, treat any `Pending` fund as publicly joinable.
 
 ## License
 
-Unlicensed prototype. Do not use with real money.
+This project is licensed under the [Apache License 2.0](LICENSE).
