@@ -1,18 +1,24 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { GeistSans } from "geist/font/sans";
+import { GeistMono } from "geist/font/mono";
 import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 import { WalletProvider } from "@/components/wallet/WalletProvider";
 
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
-  display: "swap",
-});
-
 export const metadata: Metadata = {
-  title: "chitfund. — Trustless Rotating Savings",
-  description: "A smart contract holds the money. Not a person. Trustless chit funds on Stellar.",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://sangam-stellar.vercel.app'),
+  title: {
+    default: 'sangam. — Rotating Savings on Stellar',
+    template: '%s — sangam.',
+  },
+  description: 'Sangam — rotating savings on Stellar. A smart contract holds the pot, not a person.',
+  openGraph: {
+    title: 'sangam.',
+    description: 'Rotating savings on Stellar. A smart contract holds the pot, not a person.',
+    siteName: 'sangam.',
+    type: 'website',
+  },
+  twitter: { card: 'summary_large_image' },
 };
 
 export default function RootLayout({
@@ -23,7 +29,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={inter.variable}
+      className={`${GeistSans.variable} ${GeistMono.variable}`}
       suppressHydrationWarning
     >
       <body>
