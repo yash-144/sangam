@@ -1,4 +1,7 @@
-# sangam.
+<div align="center">
+  <img src="frontend/public/logo.svg" alt="Sangam Logo" width="120" />
+  <h1>sangam.</h1>
+</div>
 
 A decentralized ROSCA (Rotating Savings and Credit Association — aka *chit fund*, *committee*, *kye*, *tanda*, *susu*) built on the [Stellar](https://stellar.org/) network using [Soroban](https://soroban.stellar.org/) smart contracts and a [Next.js](https://nextjs.org/) frontend.
 
