@@ -12,7 +12,7 @@ const walletStorageKey = "cf_wallet_address";
 const walletIdStorageKey = "cf_wallet_id";
 
 function getAppUrl() {
-    if (typeof window === "undefined") return "https://chitfund.app";
+    if (typeof window === "undefined") return "https://sangam.app";
     return window.location.origin;
 }
 
@@ -24,8 +24,8 @@ function getWalletModules() {
             projectId: walletConnectProjectId,
             allowedChains: [WalletConnectTargetChain.TESTNET],
             metadata: {
-                name: "chitfund",
-                description: "Chit fund savings circles on Stellar testnet",
+                name: "sangam",
+                description: "Sangam — rotating savings on Stellar",
                 url: getAppUrl(),
                 icons: [`${getAppUrl()}/favicon.ico`],
             },
@@ -36,8 +36,8 @@ function getWalletModules() {
 }
 
 function isMobileBrowser() {
-    if (typeof navigator === "undefined") return false;
-    return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    if (typeof window === "undefined") return false;
+    return window.matchMedia?.('(pointer: coarse)').matches ?? false;
 }
 
 if (typeof window !== "undefined") {
