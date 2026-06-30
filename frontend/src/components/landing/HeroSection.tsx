@@ -1,8 +1,87 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useWallet } from "@/components/wallet/WalletProvider";
 import { useRouter } from "next/navigation";
+
+const MEMBER_COUNT = 6;
+const RADIUS = 100;
+const CENTER = 140;
+
+function ChitFundVisual({ fadeStyle }: { fadeStyle: (delay: number) => React.CSSProperties }) {
+  const [activeIdx, setActiveIdx] = useState(0);
+  const [wonSet, setWonSet] = useState<Set<number>>(new Set());
+  const frame = useRef(0);
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      frame.current = (frame.current + 1) % (MEMBER_COUNT * 2);
+      const step = frame.current;
+      if (step % 2 === 0) {
+        const next = (step / 2) % MEMBER_COUNT;
+        setActiveIdx(next);
+        setWonSet((prev) => new Set([...prev, next]));
+        if (next === 0) setWonSet(new Set([0]));
+      }
+    }, 900);
+    return () => clearInterval(id);
+  }, []);
+
+  const size = CENTER * 2;
+
+  return (
+    <div
+      style={{
+        ...fadeStyle(0.8),
+        position: "absolute",
+        right: "4rem",
+        top: "50%",
+        transform: "translateY(-50%)",
+        width: `${size}px`,
+        height: `${size}px`,
+        display: "none",
+      }}
+      className="hero-visual"
+      aria-hidden="true"
+    >
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+        {Array.from({ length: MEMBER_COUNT }).map((_, i) => {
+          const angle = (i / MEMBER_COUNT) * Math.PI * 2 - Math.PI / 2;
+          const x = CENTER + RADIUS * Math.cos(angle);
+          const y = CENTER + RADIUS * Math.sin(angle);
+          const isActive = i === activeIdx;
+          const hasWon = wonSet.has(i);
+          return (
+            <g key={i}>
+              <line
+                x1={CENTER} y1={CENTER} x2={x} y2={y}
+                stroke={isActive ? "var(--accent)" : "var(--border)"}
+                strokeWidth={isActive ? 1.5 : 1}
+                opacity={isActive ? 0.6 : 0.3}
+              />
+              <circle
+                cx={x} cy={y} r={isActive ? 12 : 9}
+                fill={isActive ? "var(--accent)" : hasWon ? "var(--accent-light)" : "var(--muted)"}
+                stroke={isActive ? "var(--accent)" : hasWon ? "rgba(22,163,74,0.3)" : "var(--border)"}
+                strokeWidth={1.5}
+                style={{ transition: "all 0.4s ease" }}
+              />
+              {isActive && (
+                <circle cx={x} cy={y} r={20} fill="none" stroke="var(--accent)" strokeWidth={1} opacity={0.3}>
+                  <animate attributeName="r" from="12" to="24" dur="0.9s" repeatCount="indefinite" />
+                  <animate attributeName="opacity" from="0.4" to="0" dur="0.9s" repeatCount="indefinite" />
+                </circle>
+              )}
+            </g>
+          );
+        })}
+        <circle cx={CENTER} cy={CENTER} r={28} fill="var(--accent-light)" stroke="rgba(22,163,74,0.2)" strokeWidth={1.5} />
+        <text x={CENTER} y={CENTER - 5} textAnchor="middle" fontSize={8} fontWeight={600} fill="var(--accent)" fontFamily="var(--font-mono)" letterSpacing={1}>POT</text>
+        <text x={CENTER} y={CENTER + 8} textAnchor="middle" fontSize={7} fill="var(--accent)" fontFamily="var(--font-mono)" opacity={0.7}>USDC</text>
+      </svg>
+    </div>
+  );
+}
 
 export default function HeroSection() {
   const { isConnected, isConnecting, connect, connectionError } = useWallet();
@@ -72,7 +151,7 @@ export default function HeroSection() {
               ...fadeStyle(0.2),
               fontSize: "clamp(2.75rem, 7vw, 5.5rem)",
               fontWeight: 700,
-              letterSpacing: "-0.04em",
+              letterSpacing: "-0.05em",
               lineHeight: 1.05,
               marginBottom: "1.5rem",
             }}
@@ -91,12 +170,12 @@ export default function HeroSection() {
               color: "var(--muted-fg)",
               maxWidth: "40ch",
               marginBottom: "3rem",
-              lineHeight: "var(--leading-loose)",
+              lineHeight: "var(--leading-normal)",
             }}
           >
             A smart contract holds the money. Not a person.
             <br />
-            Trustless chit funds for your family, friends, and colleagues.
+            Pool, draw, payout. Until everyone has won.
           </p>
 
           {/* CTAs */}
@@ -109,7 +188,7 @@ export default function HeroSection() {
               disabled={isConnecting}
               className="btn btn-primary btn-lg hero-btn"
             >
-              {isConnecting ? "Connecting…" : isConnected ? "Open Dashboard →" : "Start a Fund →"}
+              {isConnecting ? "Opening wallet…" : isConnected ? "Open dashboard →" : "Start a fund →"}
             </button>
             <button
               onClick={() => document.getElementById("how-it-works")?.scrollIntoView({ behavior: "smooth" })}
@@ -119,11 +198,27 @@ export default function HeroSection() {
               See how it works
             </button>
           </div>
-          
+
           {/* Connection Error */}
           {connectionError && (
-            <div style={{ color: "var(--destructive)", fontSize: "var(--text-sm)", marginTop: "-1.5rem", marginBottom: "1.5rem" }}>
-              {connectionError}
+            <div style={{
+              background: "#fef2f2",
+              border: "1px solid #fecaca",
+              borderRadius: "6px",
+              padding: "0.75rem 1rem",
+              marginTop: "-1rem",
+              marginBottom: "1.5rem",
+              display: "flex",
+              alignItems: "flex-start",
+              gap: "0.625rem",
+              fontSize: "var(--text-sm)",
+              color: "#dc2626",
+            }}>
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0, marginTop: "1px" }}>
+                <circle cx="8" cy="8" r="7" stroke="#dc2626" strokeWidth="1.5"/>
+                <path d="M8 5v3M8 10.5v.5" stroke="#dc2626" strokeWidth="1.5" strokeLinecap="round"/>
+              </svg>
+              <span style={{ lineHeight: "var(--leading-normal)" }}>{connectionError}</span>
             </div>
           )}
 
@@ -135,7 +230,7 @@ export default function HeroSection() {
             {[
               { label: "Smart contract escrow" },
               { label: "USDC stablecoin" },
-              { label: "Open source" },
+              { label: "Testnet" },
             ].map((b) => (
               <div key={b.label} style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                 <div style={{
@@ -148,54 +243,8 @@ export default function HeroSection() {
           </div>
         </div>
 
-        {/* Orbiting visual — desktop only */}
-        <div
-          style={{
-            ...fadeStyle(0.8),
-            position: "absolute",
-            right: "4rem",
-            top: "50%",
-            transform: "translateY(-50%)",
-            width: "22rem",
-            height: "22rem",
-            display: "none",
-          }}
-          className="hero-visual"
-        >
-          {[0, "2.5rem", "5rem", "7.5rem"].map((inset, i) => (
-            <div key={i} style={{
-              position: "absolute",
-              inset: typeof inset === "number" ? 0 : inset,
-              borderRadius: "50%",
-              border: "1px solid var(--border)",
-              opacity: 0.5,
-            }} />
-          ))}
-          <div style={{
-            position: "absolute", inset: "7.5rem", borderRadius: "50%",
-            background: "var(--accent-light)", border: "1px solid rgba(22,163,74,0.2)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-          }}>
-            <span style={{
-              fontSize: "var(--text-xs)", fontFamily: "monospace",
-              color: "var(--accent)", fontWeight: 600, letterSpacing: "0.1em",
-            }}>
-              SECURED
-            </span>
-          </div>
-          <div className="orbit" style={{ position: "absolute", inset: 0 }}>
-            <div style={{
-              position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)",
-              width: "8px", height: "8px", borderRadius: "50%", background: "var(--fg)",
-            }} />
-          </div>
-          <div className="orbit-reverse" style={{ position: "absolute", inset: "2.5rem" }}>
-            <div style={{
-              position: "absolute", bottom: 0, left: "50%", transform: "translateX(-50%)",
-              width: "8px", height: "8px", borderRadius: "50%", background: "var(--accent)",
-            }} />
-          </div>
-        </div>
+        {/* Chit fund circle visual — desktop only */}
+        <ChitFundVisual fadeStyle={fadeStyle} />
       </div>
 
       <style>{`

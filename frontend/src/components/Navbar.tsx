@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useWallet } from "@/components/wallet/WalletProvider";
 
 function shortenAddress(addr: string) {
@@ -17,6 +18,7 @@ export default function Navbar({ showLinks = false }: NavbarProps) {
   const { isConnected, isConnecting, address, connect, disconnect, connectionError } = useWallet();
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [dismissedError, setDismissedError] = useState<string | null>(null);
 
   const [isMobile, setIsMobile] = useState(false);
 
@@ -52,6 +54,8 @@ export default function Navbar({ showLinks = false }: NavbarProps) {
         <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
           {showLinks && isMobile && (
             <button
+              aria-label="Toggle menu"
+              aria-expanded={mobileMenuOpen}
               style={{ background: "none", border: "none", color: "var(--muted-fg)", padding: "0.25rem", marginLeft: "-0.25rem", cursor: "pointer", display: "flex" }}
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             >
@@ -73,11 +77,15 @@ export default function Navbar({ showLinks = false }: NavbarProps) {
           )}
 
           <Link href="/" style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "0.5rem",
             fontSize: "var(--text-base)",
             fontWeight: 700,
-            letterSpacing: "-0.04em",
+            letterSpacing: "-0.05em",
           }}>
-            chitfund.
+            <Image src="/brand/favicon.svg" alt="sangam logo" width={28} height={28} />
+            sangam.
           </Link>
         </div>
 
@@ -111,7 +119,7 @@ export default function Navbar({ showLinks = false }: NavbarProps) {
                 <span style={{
                   fontSize: "var(--text-sm)",
                   color: "var(--muted-fg)",
-                  fontFamily: "monospace",
+                  fontFamily: "var(--font-mono)",
                 }}>
                   {shortenAddress(address)}
                 </span>
@@ -125,30 +133,14 @@ export default function Navbar({ showLinks = false }: NavbarProps) {
               </button>
             </>
           ) : (
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
-              <button
-                onClick={() => connect()}
-                disabled={isConnecting}
-                className="btn btn-primary"
-                style={{ fontSize: "var(--text-sm)", padding: "0.375rem 0.875rem" }}
-              >
-                {isConnecting ? "Connecting…" : "Connect"}
-              </button>
-              {connectionError && (
-                <span style={{ 
-                  color: "var(--destructive)", 
-                  fontSize: "10px", 
-                  position: "absolute", 
-                  top: "100%", 
-                  marginTop: "4px",
-                  right: "1.5rem",
-                  maxWidth: "200px",
-                  textAlign: "right"
-                }}>
-                  {connectionError}
-                </span>
-              )}
-            </div>
+            <button
+              onClick={() => connect()}
+              disabled={isConnecting}
+              className="btn btn-primary"
+              style={{ fontSize: "var(--text-sm)", padding: "0.375rem 0.875rem" }}
+            >
+              {isConnecting ? "Opening wallet…" : "Connect wallet"}
+            </button>
           )}
         </div>
       </div>
@@ -192,6 +184,39 @@ export default function Navbar({ showLinks = false }: NavbarProps) {
               {link.label}
             </button>
           ))}
+        </div>
+      )}
+
+      {connectionError && connectionError !== dismissedError && (
+        <div style={{
+          position: "absolute",
+          top: "60px",
+          left: 0,
+          right: 0,
+          background: "#fef2f2",
+          borderBottom: "1px solid #fecaca",
+          padding: "0.75rem 1.5rem",
+          display: "flex",
+          alignItems: "flex-start",
+          gap: "0.75rem",
+          fontSize: "var(--text-sm)",
+          color: "#dc2626",
+          zIndex: 49,
+        }}>
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0, marginTop: "1px" }}>
+            <circle cx="8" cy="8" r="7" stroke="#dc2626" strokeWidth="1.5"/>
+            <path d="M8 5v3M8 10.5v.5" stroke="#dc2626" strokeWidth="1.5" strokeLinecap="round"/>
+          </svg>
+          <span style={{ flex: 1, lineHeight: "var(--leading-normal)" }}>{connectionError}</span>
+          <button
+            aria-label="Dismiss error"
+            onClick={() => setDismissedError(connectionError)}
+            style={{ background: "none", border: "none", color: "#dc2626", padding: 0, cursor: "pointer", flexShrink: 0 }}
+          >
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path d="M1 1l12 12M13 1L1 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+            </svg>
+          </button>
         </div>
       )}
     </nav>

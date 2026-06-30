@@ -9,15 +9,15 @@ export default function Footer() {
         <span style={{
           fontSize: "var(--text-base)",
           fontWeight: 700,
-          letterSpacing: "-0.04em",
+          letterSpacing: "-0.05em",
         }}>
-          chitfund.
+          sangam.
         </span>
         <p style={{ fontSize: "var(--text-sm)", color: "var(--muted-fg)" }}>
           Built on Stellar · USDC · Soroban
         </p>
         <p style={{ fontSize: "var(--text-sm)", color: "var(--muted-fg)" }}>
-          Open source · Testnet
+          Testnet
         </p>
       </div>
     </footer>

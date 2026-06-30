@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useInView } from "@/hooks/useInView";
 
 const tiers = [
   {
@@ -16,31 +16,21 @@ const tiers = [
     label: "Coming",
     title: "KYC Verified",
     desc: "Identity-linked accountability for semi-strangers.",
-    features: ["Aadhaar / DigiLocker", "Reputation scores", "Larger groups", "Legal recourse"],
+    features: ["National ID verification", "Reputation scores", "Larger groups", "Legal recourse"],
     active: false,
   },
   {
     tag: "V3",
     label: "Future",
     title: "Collateral Bond",
-    desc: "Fully trustless. Collateral covers missed deposits automatically.",
+    desc: "Self-enforcing. Collateral covers missed deposits automatically.",
     features: ["Bond at join time", "Auto-cover defaults", "Open public funds", "Zero default risk"],
     active: false,
   },
 ];
 
 export default function Roadmap() {
-  const ref = useRef<HTMLElement>(null);
-  const [visible, setVisible] = useState(false);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) setVisible(true); },
-      { rootMargin: "-80px" }
-    );
-    if (ref.current) observer.observe(ref.current);
-    return () => observer.disconnect();
-  }, []);
+  const [ref, visible] = useInView<HTMLElement>();
 
   return (
     <section id="roadmap" ref={ref} style={{ padding: "var(--space-section) 0" }}>

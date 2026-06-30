@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
+import { useInView } from "@/hooks/useInView";
 
 const faqs = [
   {
@@ -21,7 +22,7 @@ const faqs = [
   },
   {
     q: "Do I need to know about crypto?",
-    a: "You need a Freighter wallet (a free browser extension) and some USDC. That's it. The app handles everything else.",
+    a: "You need a Stellar wallet — Freighter, Lobstr, xBull, or any WalletConnect-compatible mobile wallet — and some testnet USDC. That's it. The app handles everything else.",
   },
   {
     q: "Is this safe?",
@@ -34,18 +35,8 @@ const faqs = [
 ];
 
 export default function FAQ() {
-  const ref = useRef<HTMLElement>(null);
-  const [visible, setVisible] = useState(false);
+  const [ref, visible] = useInView<HTMLElement>();
   const [open, setOpen] = useState<number | null>(null);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) setVisible(true); },
-      { rootMargin: "-80px" }
-    );
-    if (ref.current) observer.observe(ref.current);
-    return () => observer.disconnect();
-  }, []);
 
   return (
     <section id="faq" ref={ref} style={{ padding: "var(--space-section) 0" }}>
@@ -76,6 +67,8 @@ export default function FAQ() {
           {faqs.map((faq, i) => (
             <div key={i} style={{ borderTop: "1px solid var(--border)" }}>
               <button
+                aria-expanded={open === i}
+                aria-controls={`faq-panel-${i}`}
                 onClick={() => setOpen(open === i ? null : i)}
                 style={{
                   width: "100%", background: "none", border: "none",
@@ -91,20 +84,27 @@ export default function FAQ() {
                 }}>
                   {faq.q}
                 </span>
-                <span
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 16 16"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
                   style={{
-                    fontSize: "var(--text-md)",
-                    color: "var(--muted-fg)",
                     flexShrink: 0,
+                    color: "var(--muted-fg)",
                     transition: "transform 0.2s ease",
-                    transform: open === i ? "rotate(45deg)" : "rotate(0deg)",
-                    lineHeight: 1,
+                    transform: open === i ? "rotate(180deg)" : "rotate(0deg)",
                   }}
                 >
-                  +
-                </span>
+                  <path d="M3 6l5 5 5-5" />
+                </svg>
               </button>
               <div
+                id={`faq-panel-${i}`}
                 style={{
                   overflow: "hidden",
                   maxHeight: open === i ? "300px" : "0",
@@ -114,7 +114,7 @@ export default function FAQ() {
                 <p style={{
                   fontSize: "var(--text-sm)",
                   color: "var(--muted-fg)",
-                  lineHeight: "var(--leading-loose)",
+                  lineHeight: "var(--leading-normal)",
                   paddingBottom: "1.5rem",
                 }}>
                   {faq.a}
