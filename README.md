@@ -36,12 +36,12 @@ A group of 2–10 members each contribute a fixed amount every round. Each round
       <td align="center">
         <img src="./screenshots/landing-page.png" alt="Landing Page" width="400" />
         <br />
-        <b>Landing Page</b>
+        <b>Dashboard</b>
       </td>
       <td align="center">
         <img src="./screenshots/dashboard.png" alt="Dashboard" width="400" />
         <br />
-        <b>Dashboard</b>
+        <b>Landing Page</b>
       </td>
     </tr>
     <tr>
