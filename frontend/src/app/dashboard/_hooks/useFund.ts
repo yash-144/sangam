@@ -9,6 +9,7 @@ import {
   type MemberStatus,
   type RoundSummary,
 } from "@/lib/contract";
+import { supabase } from "@/lib/supabase";
 
 export type Phase = "pending" | "deposit" | "commit" | "reveal" | "claim" | "completed";
 
@@ -75,30 +76,62 @@ export function useFund(address: string | null, isConnected: boolean) {
   const [actionLoading, setActionLoading] = useState(false);
   const liveSyncInFlight = useRef(false);
 
-  // Restore fund ID from localStorage
+  // Restore fund ID from Supabase (fallback to localStorage)
   useEffect(() => {
-    const timer = window.setTimeout(() => {
-      const key = address ? `cf_current_fund_id_${address}` : null;
-      const saved = key ? window.localStorage.getItem(key) : null;
-      if (saved) {
-        setCurrentFundId(Number(saved));
-      } else {
-        setCurrentFundId(null);
-        setSummary(null);
-        setRound(null);
-        setRoundHistory([]);
-        setMemberStatuses({});
-        setPendingJoinFundId(null);
-        setPendingStartFundId(null);
-        setPendingSealKey(null);
+    if (!address) {
+      setCurrentFundId(null);
+      setSummary(null);
+      setRound(null);
+      setRoundHistory([]);
+      setMemberStatuses({});
+      setPendingJoinFundId(null);
+      setPendingStartFundId(null);
+      setPendingSealKey(null);
+      return;
+    }
+
+    const loadActiveFund = async () => {
+      let foundId: number | null = null;
+      
+      try {
+        const { data, error } = await supabase
+          .from("users")
+          .select("active_fund_id")
+          .eq("stellar_wallet", address)
+          .single();
+          
+        if (!error && data?.active_fund_id) {
+          foundId = Number(data.active_fund_id);
+        }
+      } catch (err) {
+        console.error("Failed to fetch active fund from Supabase", err);
       }
-    }, 0);
-    return () => window.clearTimeout(timer);
+      
+      if (!foundId) {
+        const key = `cf_current_fund_id_${address}`;
+        const saved = window.localStorage.getItem(key);
+        if (saved) foundId = Number(saved);
+      }
+      
+      if (foundId) setCurrentFundId(foundId);
+    };
+    
+    loadActiveFund();
   }, [address]);
 
+  // Sync fund ID to Supabase and localStorage on change
   useEffect(() => {
     const key = address ? `cf_current_fund_id_${address}` : null;
-    if (key && currentFundId !== null) localStorage.setItem(key, String(currentFundId));
+    if (key && currentFundId !== null) {
+      localStorage.setItem(key, String(currentFundId));
+      
+      supabase.from("users")
+        .update({ active_fund_id: currentFundId })
+        .eq("stellar_wallet", address)
+        .then(({ error }) => {
+          if (error) console.error("Failed to sync active fund to Supabase:", error);
+        });
+    }
   }, [address, currentFundId]);
 
   const fetchFund = useCallback(async (overrideFundId?: number, options: FetchOptions = {}) => {

@@ -4,6 +4,7 @@
 /* ─── Design Tokens ────────────────────────────────── */
 :root {
   --bg: #fafafa;
+  --surface: #ffffff;
   --fg: #0f0f0f;
   --muted: #f4f4f5;
   --muted-fg: #71717a;

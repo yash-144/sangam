@@ -11,6 +11,7 @@
   "dependencies": {
     "@creit-tech/stellar-wallets-kit": "npm:@jsr/creit-tech__stellar-wallets-kit@^2.4.0",
     "@stellar/stellar-sdk": "^16.0.1",
+    "@supabase/supabase-js": "^2.109.0",
     "@vercel/analytics": "^2.0.1",
     "geist": "^1.7.2",
     "next": "^16.2.9",

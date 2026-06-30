@@ -12,7 +12,7 @@ export function FundStats({ summary, currentRound, potAmount }: FundStatsProps) 
     { label: "Pot Size", value: `${stroopsToDisplay(potAmount)} USDC` },
     { label: "Round", value: `${currentRound} / ${summary.config.member_count}` },
     { label: "Members", value: `${summary.members.length} / ${summary.config.member_count}` },
-    { label: "Contribution", value: `${stroopsToDisplay(summary.config.contribution)} USDC` },
+    { label: "Your contribution", value: `${stroopsToDisplay(summary.config.contribution)} USDC` },
   ];
 
   return (

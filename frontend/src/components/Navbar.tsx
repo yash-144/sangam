@@ -15,7 +15,7 @@ interface NavbarProps {
 }
 
 export default function Navbar({ showLinks = false }: NavbarProps) {
-  const { isConnected, isConnecting, address, connect, disconnect, connectionError } = useWallet();
+  const { isConnected, isConnecting, address, connect, disconnect, connectionError, supabaseUser, signInWithGoogle, signOutGoogle } = useWallet();
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [dismissedError, setDismissedError] = useState<string | null>(null);
@@ -115,17 +115,43 @@ export default function Navbar({ showLinks = false }: NavbarProps) {
         <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
           {isConnected && address ? (
             <>
+              {!supabaseUser ? (
+                <button
+                  onClick={() => signInWithGoogle()}
+                  className="btn btn-primary"
+                  style={{ fontSize: "var(--text-sm)", padding: "0.375rem 0.875rem" }}
+                >
+                  Link Google
+                </button>
+              ) : (
+                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                  {supabaseUser.user_metadata?.avatar_url && (
+                    <img
+                      src={supabaseUser.user_metadata.avatar_url}
+                      alt="avatar"
+                      style={{ width: 28, height: 28, borderRadius: "50%" }}
+                    />
+                  )}
+                  {!isMobile && (
+                    <span style={{ fontSize: "var(--text-sm)", color: "var(--fg)", fontWeight: 600 }}>
+                      {supabaseUser.user_metadata?.full_name?.split(" ")[0] || "User"}
+                    </span>
+                  )}
+                </div>
+              )}
+              
               {!isMobile && (
                 <span style={{
                   fontSize: "var(--text-sm)",
                   color: "var(--muted-fg)",
                   fontFamily: "var(--font-mono)",
+                  marginLeft: "0.5rem"
                 }}>
                   {shortenAddress(address)}
                 </span>
               )}
               <button
-                onClick={() => disconnect()}
+                onClick={() => { disconnect(); signOutGoogle(); }}
                 className="btn btn-outline"
                 style={{ fontSize: "var(--text-sm)", padding: "0.375rem 0.875rem" }}
               >
