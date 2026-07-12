@@ -19,6 +19,7 @@ A group of 2–10 members each contribute a fixed amount every round. Each round
 ## Table of Contents
 
 - [Screenshots](#screenshots)
+- [Demo Video](#demo-video)
 - [Architecture](#architecture)
 - [Fund Lifecycle](#fund-lifecycle)
 - [Smart Contract API](#smart-contract-api)
@@ -29,6 +30,7 @@ A group of 2–10 members each contribute a fixed amount every round. Each round
 - [Environment Variables](#environment-variables)
 - [Building and Deploying the Contract](#building-and-deploying-the-contract)
 - [Known Limitations](#known-limitations)
+- [User Feedback](#user-feedback)
 
 ---
 
@@ -50,6 +52,30 @@ A group of 2–10 members each contribute a fixed amount every round. Each round
     </tr>
     <tr>
       <td align="center">
+        <img src="./screenshots/dashboard-claim-pot.png" alt="Claim Pot" width="400" />
+        <br />
+        <b>Claim Pot</b>
+      </td>
+      <td align="center">
+        <img src="./screenshots/dashboard-members-tab.png" alt="Members Tab" width="400" />
+        <br />
+        <b>Members Tab</b>
+      </td>
+    </tr>
+    <tr>
+      <td align="center">
+        <img src="./screenshots/dashboard-fund-complete.png" alt="Fund Complete" width="400" />
+        <br />
+        <b>Fund Complete</b>
+      </td>
+      <td align="center">
+        <img src="./screenshots/analytics.png" alt="Vercel Analytics" width="400" />
+        <br />
+        <b>Vercel Analytics</b>
+      </td>
+    </tr>
+    <tr>
+      <td align="center">
         <img src="./screenshots/mobile-view-1.jpeg" alt="Mobile View 1" width="200" />
         <br />
         <b>Mobile View 1</b>
@@ -62,6 +88,12 @@ A group of 2–10 members each contribute a fixed amount every round. Each round
     </tr>
   </table>
 </div>
+
+---
+
+## Demo Video
+
+[▶ Watch the full demo on Google Drive](https://drive.google.com/file/d/1uZWkacPI03zVqkNoUzsU4Vdh1A59qJTH/view?usp=share_link)
 
 ---
 
@@ -164,12 +196,12 @@ Constraints enforced by the contract:
 
 The contract is deployed on Stellar testnet at:
 
-- **Contract ID:** `CCHSYVP3YPWVVUCG6EPS2WTYPF4L6TLRXF4ZS7Z62PIEF5OIQJ36TMTR`
+- **Contract ID:** [`CCHSYVP3YPWVVUCG6EPS2WTYPF4L6TLRXF4ZS7Z62PIEF5OIQJ36TMTR`](https://stellar.expert/explorer/testnet/contract/CCHSYVP3YPWVVUCG6EPS2WTYPF4L6TLRXF4ZS7Z62PIEF5OIQJ36TMTR)
 - **Asset ID (test USDC stub):** `CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC`
 - **Network passphrase:** `Test SDF Network ; September 2015`
 - **RPC:** `https://soroban-testnet.stellar.org`
 
-You can inspect it on [Stellar Expert (testnet)](https://stellar.expert/explorer/testnet).
+You can inspect the contract and view its transaction history (proof of user interactions) on [Stellar Expert](https://stellar.expert/explorer/testnet/contract/CCHSYVP3YPWVVUCG6EPS2WTYPF4L6TLRXF4ZS7Z62PIEF5OIQJ36TMTR).
 
 ---
 
@@ -325,6 +357,19 @@ If you want real gating, you would need one of:
 - Switching to non-sequential, unguessable `fund_id`s (e.g. randomly generated `BytesN<16>`) so enumeration becomes infeasible — though codes alone still wouldn't gate access, only obscure it.
 
 Until one of those exists, treat any `Pending` fund as publicly joinable.
+
+---
+
+## User Feedback
+
+During a live demonstration and testing session with early users, the ChitFund dApp received highly positive initial feedback. Key takeaways from the session include:
+
+- **Concept & Accessibility:** Users found the core concept "very interesting" and praised the platform for being "very easy to use." This validates the primary design goal of making decentralized, on-chain ROSCAs accessible to non-technical users.
+- **Design & UI:** Testers specifically highlighted the visual design and ease of navigation, noting the "nice website and good UI" alongside a "user-friendly interface." This confirms that the recent front-end overhaul and clean typography resonated well with the target audience.
+
+<div align="center">
+  <img src="./screenshots/user-feedback.png" alt="User Feedback from Google Meet" width="600" />
+</div>
 
 ---
 
