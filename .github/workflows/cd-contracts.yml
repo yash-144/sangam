@@ -105,7 +105,7 @@ jobs:
         env:
           STELLAR_SECRET_KEY: ${{ secrets.STELLAR_TESTNET_SECRET_KEY }}
         run: |
-          stellar keys add deployer --secret-key "$STELLAR_SECRET_KEY"
+          echo "$STELLAR_SECRET_KEY" | stellar keys add deployer
           stellar network add testnet \
             --rpc-url https://soroban-testnet.stellar.org \
             --network-passphrase "Test SDF Network ; September 2015"
