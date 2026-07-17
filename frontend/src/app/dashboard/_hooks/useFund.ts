@@ -76,46 +76,48 @@ export function useFund(address: string | null, isConnected: boolean) {
   const [actionLoading, setActionLoading] = useState(false);
   const liveSyncInFlight = useRef(false);
 
-  // Restore fund ID from Supabase (fallback to localStorage)
+  // Restore fund ID from Supabase (fallback to localStorage).
+  // All setState calls are inside the async function so none fire
+  // synchronously in the effect body (satisfies react-hooks/set-state-in-effect).
   useEffect(() => {
-    if (!address) {
-      setCurrentFundId(null);
-      setSummary(null);
-      setRound(null);
-      setRoundHistory([]);
-      setMemberStatuses({});
-      setPendingJoinFundId(null);
-      setPendingStartFundId(null);
-      setPendingSealKey(null);
-      return;
-    }
-
     const loadActiveFund = async () => {
+      if (!address) {
+        setCurrentFundId(null);
+        setSummary(null);
+        setRound(null);
+        setRoundHistory([]);
+        setMemberStatuses({});
+        setPendingJoinFundId(null);
+        setPendingStartFundId(null);
+        setPendingSealKey(null);
+        return;
+      }
+
       let foundId: number | null = null;
-      
+
       try {
         const { data, error } = await supabase
           .from("users")
           .select("active_fund_id")
           .eq("stellar_wallet", address)
           .single();
-          
+
         if (!error && data?.active_fund_id) {
           foundId = Number(data.active_fund_id);
         }
       } catch (err) {
         console.error("Failed to fetch active fund from Supabase", err);
       }
-      
+
       if (!foundId) {
         const key = `cf_current_fund_id_${address}`;
         const saved = window.localStorage.getItem(key);
         if (saved) foundId = Number(saved);
       }
-      
+
       if (foundId) setCurrentFundId(foundId);
     };
-    
+
     loadActiveFund();
   }, [address]);
 

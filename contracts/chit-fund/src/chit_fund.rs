@@ -1,9 +1,8 @@
-use soroban_sdk::{token, Address, Env, String, Vec};
 use crate::storage::{
-    get_summary, set_summary, FundConfig, FundState, FundSummary,
-    get_member_record, set_member_record, increment_deposit_count,
-    reset_accumulator, increment_next_fund_id
+    get_member_record, get_summary, increment_deposit_count, increment_next_fund_id,
+    reset_accumulator, set_member_record, set_summary, FundConfig, FundState, FundSummary,
 };
+use soroban_sdk::{token, Address, Env, String, Vec};
 
 pub fn create_fund(
     env: &Env,
@@ -15,7 +14,7 @@ pub fn create_fund(
 ) -> u64 {
     organizer.require_auth();
 
-    if member_count < 2 || member_count > 10 {
+    if !(2..=10).contains(&member_count) {
         panic!("member count must be between 2 and 10");
     }
     if contribution <= 0 {
@@ -43,7 +42,7 @@ pub fn create_fund(
 
     let fund_id = increment_next_fund_id(env);
     set_summary(env, fund_id, &summary);
-    
+
     fund_id
 }
 

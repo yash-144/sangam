@@ -24,7 +24,7 @@ export function MembersList({ summary, memberStatuses, address, stateName }: Mem
 
       if (data && !error) {
         const profileMap: Record<string, { name?: string; avatar_url?: string }> = {};
-        data.forEach(p => {
+        data.forEach((p: { stellar_wallet: string; name?: string; avatar_url?: string }) => {
           profileMap[p.stellar_wallet] = p;
         });
         setProfiles(profileMap);

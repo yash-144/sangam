@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from "react";
+import type { Session, AuthChangeEvent } from "@supabase/supabase-js";
 import { StellarWalletsKit, Networks } from "@creit-tech/stellar-wallets-kit";
 import { defaultModules } from "@creit-tech/stellar-wallets-kit/modules/utils";
 import { WalletConnectModule, WalletConnectTargetChain } from "@creit-tech/stellar-wallets-kit/modules/wallet-connect";
@@ -41,12 +42,12 @@ function isMobileBrowser() {
     return window.matchMedia?.('(pointer: coarse)').matches ?? false;
 }
 
-if (typeof window !== "undefined" && !(window as any)._stellarWalletsKitInitialized) {
+if (typeof window !== "undefined" && !(window as Window & { _stellarWalletsKitInitialized?: boolean })._stellarWalletsKitInitialized) {
     StellarWalletsKit.init({
         modules: getWalletModules(),
         network: Networks.TESTNET,
     });
-    (window as any)._stellarWalletsKitInitialized = true;
+    (window as Window & { _stellarWalletsKitInitialized?: boolean })._stellarWalletsKitInitialized = true;
 }
 
 interface WalletContextType extends WalletState {
@@ -105,7 +106,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     }, []);
 
     useEffect(() => {
-        supabase.auth.getSession().then(({ data: { session } }) => {
+        supabase.auth.getSession().then(({ data: { session } }: { data: { session: Session | null } }) => {
             setState((prev) => ({
                 ...prev,
                 supabaseUser: session?.user ?? null,
@@ -113,7 +114,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
             }));
         });
 
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event: AuthChangeEvent, session: Session | null) => {
             setState((prev) => ({
                 ...prev,
                 supabaseUser: session?.user ?? null,
@@ -130,7 +131,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         return () => subscription.unsubscribe();
     }, []);
 
-    const linkWalletToGoogle = async (walletAddress: string, user: any) => {
+    const linkWalletToGoogle = async (walletAddress: string, user: { id: string; email?: string; user_metadata?: Record<string, string> }) => {
         try {
             // Check if this wallet is already linked to someone else
             const { data: existingWallet, error: fetchError } = await supabase
@@ -183,14 +184,14 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
                      }));
                 }
             }
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error("Exception during linking:", err);
             await supabase.auth.signOut();
             setState(prev => ({ 
                 ...prev, 
                 connectionError: null,
                 supabaseUser: null,
-                linkingErrorModal: `Unexpected Error: ${err.message}` 
+                linkingErrorModal: `Unexpected Error: ${err instanceof Error ? err.message : String(err)}` 
             }));
         }
     };
@@ -225,7 +226,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
             if (session?.user) {
                 await linkWalletToGoogle(address, session.user);
             }
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error("Failed to connect wallet:", error);
             
             let errorMessage = "Connection failed";

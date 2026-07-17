@@ -1,11 +1,11 @@
 #![no_std]
 
-use soroban_sdk::{contract, contractimpl, Address, BytesN, Env, String};
 use crate::storage::FundSummary;
+use soroban_sdk::{contract, contractimpl, Address, BytesN, Env, String};
 
-mod storage;
 mod chit_fund;
 mod randomness;
+mod storage;
 
 #[contract]
 pub struct ChitFundContract;
@@ -55,7 +55,12 @@ impl ChitFundContract {
         chit_fund::get_round_summary(&env, fund_id, round)
     }
 
-    pub fn get_member_status(env: Env, fund_id: u64, member: Address, round: u32) -> storage::MemberStatus {
+    pub fn get_member_status(
+        env: Env,
+        fund_id: u64,
+        member: Address,
+        round: u32,
+    ) -> storage::MemberStatus {
         storage::get_member_status(&env, fund_id, member, round)
     }
 }

@@ -1,9 +1,9 @@
-use soroban_sdk::{BytesN, Env, Address};
 use crate::storage::{
-    get_summary, set_summary, FundState, get_member_record, set_member_record,
-    get_deposit_count, get_commit_count, increment_commit_count,
-    get_reveal_count, increment_reveal_count, get_accumulator, xor_into_accumulator
+    get_accumulator, get_deposit_count, get_member_record, get_reveal_count, get_summary,
+    increment_commit_count, increment_reveal_count, set_member_record, set_summary,
+    xor_into_accumulator, FundState,
 };
+use soroban_sdk::{Address, BytesN, Env};
 
 pub fn commit_hash(env: &Env, fund_id: u64, member: Address, hash: BytesN<32>) {
     member.require_auth();
@@ -76,9 +76,11 @@ pub fn reveal_hash(env: &Env, fund_id: u64, member: Address, secret: BytesN<32>)
             }
         }
 
-        if eligible_members.len() > 0 {
+        if !eligible_members.is_empty() {
             let winner_index = (rand_num % (eligible_count as u64)) as u32;
-            let winner = eligible_members.get(winner_index % eligible_members.len()).unwrap();
+            let winner = eligible_members
+                .get(winner_index % eligible_members.len())
+                .unwrap();
             summary.past_winners.push_back(winner);
             set_summary(env, fund_id, &summary);
         }
