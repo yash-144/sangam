@@ -34,7 +34,7 @@ jobs:
       - name: Install Rust stable with WASM target
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: wasm32-unknown-unknown
+          targets: wasm32-unknown-unknown, wasm32v1-none
           components: clippy, rustfmt
 
       - name: Cache Cargo registry & build artefacts
@@ -72,7 +72,7 @@ jobs:
       - name: Install Rust stable with WASM target
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: wasm32-unknown-unknown
+          targets: wasm32-unknown-unknown, wasm32v1-none
 
       - name: Cache Cargo registry & build artefacts
         uses: actions/cache@v4
@@ -106,7 +106,7 @@ jobs:
       - name: Install Rust stable with WASM target
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: wasm32-unknown-unknown
+          targets: wasm32-unknown-unknown, wasm32v1-none
 
       - name: Cache Cargo registry & build artefacts
         uses: actions/cache@v4
