@@ -9,13 +9,12 @@ on:
   workflow_dispatch:
     inputs:
       network:
-        description: "Target network (testnet | mainnet)"
+        description: "Target network (testnet)"
         required: true
         default: "testnet"
         type: choice
         options:
           - testnet
-          - mainnet
 
 concurrency:
   group: cd-contracts-${{ github.ref }}
@@ -145,77 +144,4 @@ jobs:
           echo "| Contract ID | ${{ steps.deploy.outputs.contract_id }} |" >> "$GITHUB_STEP_SUMMARY"
           echo "| Commit | ${{ github.sha }} |" >> "$GITHUB_STEP_SUMMARY"
 
-  # ────────────────────────────────────────────────────────────────
-  # 3. Deploy to Mainnet (manual trigger only – requires approval)
-  # ────────────────────────────────────────────────────────────────
-  deploy-mainnet:
-    name: Deploy → Mainnet
-    runs-on: ubuntu-latest
-    needs: build
-    if: |
-      github.event_name == 'workflow_dispatch' && github.event.inputs.network == 'mainnet'
-    environment:
-      name: mainnet
-      url: https://stellar.expert/explorer/mainnet
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Install Rust stable with WASM target
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: wasm32-unknown-unknown
-
-      - name: Install system dependencies
-        run: sudo apt-get update && sudo apt-get install -y libdbus-1-dev libudev-dev pkg-config
-
-      - name: Install Stellar CLI
-        run: cargo install --locked stellar-cli
-
-      - name: Download WASM artefact
-        uses: actions/download-artifact@v4
-        with:
-          name: chit-fund-wasm
-          path: wasm-out/
-
-      - name: Configure Stellar CLI – mainnet identity
-        env:
-          STELLAR_SECRET_KEY: ${{ secrets.STELLAR_MAINNET_SECRET_KEY }}
-        run: |
-          stellar keys add deployer --secret-key "$STELLAR_SECRET_KEY"
-          stellar network add mainnet \
-            --rpc-url https://mainnet.sorobanrpc.com \
-            --network-passphrase "Public Global Stellar Network ; September 2015"
-
-      - name: Upload contract WASM to mainnet
-        id: upload
-        run: |
-          WASM_HASH=$(stellar contract upload \
-            --wasm wasm-out/chit_fund.wasm \
-            --source deployer \
-            --network mainnet)
-          echo "wasm_hash=$WASM_HASH" >> "$GITHUB_OUTPUT"
-          echo "✅ WASM hash: $WASM_HASH"
-
-      - name: Deploy contract on mainnet
-        id: deploy
-        env:
-          WASM_HASH: ${{ steps.upload.outputs.wasm_hash }}
-        run: |
-          CONTRACT_ID=$(stellar contract deploy \
-            --wasm-hash "$WASM_HASH" \
-            --source deployer \
-            --network mainnet)
-          echo "contract_id=$CONTRACT_ID" >> "$GITHUB_OUTPUT"
-          echo "✅ Contract deployed at: $CONTRACT_ID"
-
-      - name: Save deployment summary
-        run: |
-          echo "### 🚀 Mainnet Deployment" >> "$GITHUB_STEP_SUMMARY"
-          echo "| Field | Value |" >> "$GITHUB_STEP_SUMMARY"
-          echo "| --- | --- |" >> "$GITHUB_STEP_SUMMARY"
-          echo "| Network | Mainnet |" >> "$GITHUB_STEP_SUMMARY"
-          echo "| WASM Hash | ${{ steps.upload.outputs.wasm_hash }} |" >> "$GITHUB_STEP_SUMMARY"
-          echo "| Contract ID | ${{ steps.deploy.outputs.contract_id }} |" >> "$GITHUB_STEP_SUMMARY"
-          echo "| Commit | ${{ github.sha }} |" >> "$GITHUB_STEP_SUMMARY"
