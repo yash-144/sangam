@@ -1,0 +1,134 @@
+name: CI – Smart Contracts
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - "contracts/**"
+      - ".github/workflows/ci-contracts.yml"
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - "contracts/**"
+      - ".github/workflows/ci-contracts.yml"
+
+env:
+  CARGO_TERM_COLOR: always
+  SOROBAN_SDK_VERSION: "22.0.7"
+
+jobs:
+  # ────────────────────────────────────────────────────────────────
+  # 1. Lint – clippy + rustfmt
+  # ────────────────────────────────────────────────────────────────
+  lint:
+    name: Lint (clippy + fmt)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: contracts/chit-fund
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust stable with WASM target
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+          components: clippy, rustfmt
+
+      - name: Cache Cargo registry & build artefacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            contracts/chit-fund/target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('contracts/chit-fund/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      - name: Run rustfmt
+        run: cargo fmt --all -- --check
+
+      - name: Run clippy
+        run: cargo clippy --all-targets --all-features -- -D warnings
+
+  # ────────────────────────────────────────────────────────────────
+  # 2. Test – unit + integration tests via soroban-sdk testutils
+  # ────────────────────────────────────────────────────────────────
+  test:
+    name: Test (unit + integration)
+    runs-on: ubuntu-latest
+    needs: lint
+    defaults:
+      run:
+        working-directory: contracts/chit-fund
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust stable with WASM target
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Cache Cargo registry & build artefacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            contracts/chit-fund/target
+          key: ${{ runner.os }}-cargo-test-${{ hashFiles('contracts/chit-fund/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-test-
+
+      - name: Run tests
+        run: cargo test --all-features
+
+  # ────────────────────────────────────────────────────────────────
+  # 3. Build – compile to WASM (release profile)
+  # ────────────────────────────────────────────────────────────────
+  build:
+    name: Build WASM (release)
+    runs-on: ubuntu-latest
+    needs: test
+    defaults:
+      run:
+        working-directory: contracts/chit-fund
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust stable with WASM target
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Cache Cargo registry & build artefacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            contracts/chit-fund/target
+          key: ${{ runner.os }}-cargo-build-${{ hashFiles('contracts/chit-fund/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-build-
+
+      - name: Install Stellar CLI
+        run: |
+          cargo install --locked stellar-cli --features opt
+
+      - name: Build optimised WASM
+        run: stellar contract build
+
+      - name: Upload WASM artefact
+        uses: actions/upload-artifact@v4
+        with:
+          name: chit-fund-wasm
+          path: contracts/chit-fund/target/wasm32-unknown-unknown/release/chit_fund.wasm
+          retention-days: 7

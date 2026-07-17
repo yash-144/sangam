@@ -1,0 +1,25 @@
+# Git
+.git
+.gitignore
+
+# CI/CD
+.github
+
+# Contracts
+contracts/
+
+# Frontend – development artefacts
+frontend/.next/
+frontend/node_modules/
+frontend/out/
+frontend/.env*
+frontend/*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docs
+README.md
+plan.md
+screenshots/

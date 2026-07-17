@@ -1,0 +1,95 @@
+name: CI – Frontend
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - "frontend/**"
+      - ".github/workflows/ci-frontend.yml"
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - "frontend/**"
+      - ".github/workflows/ci-frontend.yml"
+
+jobs:
+  # ────────────────────────────────────────────────────────────────
+  # 1. Lint – ESLint + TypeScript type-check
+  # ────────────────────────────────────────────────────────────────
+  lint:
+    name: Lint & Type-check
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Configure JSR registry (@jsr scope)
+        run: echo "@jsr:registry=https://npm.jsr.io" >> .npmrc
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run ESLint
+        run: npm run lint
+
+      - name: TypeScript type-check
+        run: npx tsc --noEmit
+
+  # ────────────────────────────────────────────────────────────────
+  # 2. Build – Next.js production build
+  # ────────────────────────────────────────────────────────────────
+  build:
+    name: Build (Next.js)
+    runs-on: ubuntu-latest
+    needs: lint
+    defaults:
+      run:
+        working-directory: frontend
+
+    env:
+      # Provide stub values so the build doesn't fail on missing envs.
+      # Real secrets are injected at deploy time via Vercel.
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co' }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-anon-key' }}
+      NEXT_PUBLIC_SOROBAN_CONTRACT_ID: ${{ secrets.NEXT_PUBLIC_SOROBAN_CONTRACT_ID || 'CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABSC4' }}
+      NEXT_PUBLIC_STELLAR_NETWORK: testnet
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Configure JSR registry (@jsr scope)
+        run: echo "@jsr:registry=https://npm.jsr.io" >> .npmrc
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build production bundle
+        run: npm run build
+
+      - name: Upload build artefact
+        uses: actions/upload-artifact@v4
+        with:
+          name: nextjs-build
+          path: |
+            frontend/.next/
+            frontend/public/
+          retention-days: 3
