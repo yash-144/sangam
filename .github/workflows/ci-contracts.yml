@@ -121,7 +121,7 @@ jobs:
 
       - name: Install Stellar CLI
         run: |
-          cargo install --locked stellar-cli --features opt
+          cargo install --locked stellar-cli
 
       - name: Build optimised WASM
         run: stellar contract build

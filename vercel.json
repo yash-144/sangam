@@ -1,8 +1,8 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "cd frontend && npm ci && npm run build",
-  "outputDirectory": "frontend/.next",
-  "installCommand": "cd frontend && npm ci",
+  "installCommand": "npm ci --legacy-peer-deps",
+  "buildCommand": "npm run build",
+  "outputDirectory": ".next",
   "framework": "nextjs",
   "rewrites": [
     {
@@ -44,20 +44,11 @@
           "value": "public, max-age=31536000, immutable"
         }
       ]
-    },
-    {
-      "source": "/public/(.*)",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=86400, stale-while-revalidate=3600"
-        }
-      ]
     }
   ],
   "regions": ["iad1"],
   "functions": {
-    "frontend/src/app/api/**/*.ts": {
+    "src/app/api/**/*.ts": {
       "maxDuration": 30
     }
   },

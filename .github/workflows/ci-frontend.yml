@@ -38,7 +38,7 @@ jobs:
         run: echo "@jsr:registry=https://npm.jsr.io" >> .npmrc
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --legacy-peer-deps
 
       - name: Run ESLint
         run: npm run lint
@@ -80,7 +80,7 @@ jobs:
         run: echo "@jsr:registry=https://npm.jsr.io" >> .npmrc
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --legacy-peer-deps
 
       - name: Build production bundle
         run: npm run build
