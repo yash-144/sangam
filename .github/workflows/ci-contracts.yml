@@ -133,5 +133,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: chit-fund-wasm
-          path: contracts/chit-fund/target/wasm32-unknown-unknown/release/chit_fund.wasm
+          path: contracts/chit-fund/target/wasm32v1-none/release/chit_fund.wasm
           retention-days: 7
