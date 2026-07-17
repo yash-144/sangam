@@ -196,12 +196,12 @@ Constraints enforced by the contract:
 
 The contract is deployed on Stellar testnet at:
 
-- **Contract ID:** [`CCHSYVP3YPWVVUCG6EPS2WTYPF4L6TLRXF4ZS7Z62PIEF5OIQJ36TMTR`](https://stellar.expert/explorer/testnet/contract/CCHSYVP3YPWVVUCG6EPS2WTYPF4L6TLRXF4ZS7Z62PIEF5OIQJ36TMTR)
+- **Contract ID:** [`CCOVUMBMDAGKILTCU5UW6G3QAIDYYMOHWF6VSRCAODZ25MFBW5BU7I3H`](https://stellar.expert/explorer/testnet/contract/CCOVUMBMDAGKILTCU5UW6G3QAIDYYMOHWF6VSRCAODZ25MFBW5BU7I3H)
 - **Asset ID (test USDC stub):** `CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC`
 - **Network passphrase:** `Test SDF Network ; September 2015`
 - **RPC:** `https://soroban-testnet.stellar.org`
 
-You can inspect the contract and view its transaction history (proof of user interactions) on [Stellar Expert](https://stellar.expert/explorer/testnet/contract/CCHSYVP3YPWVVUCG6EPS2WTYPF4L6TLRXF4ZS7Z62PIEF5OIQJ36TMTR).
+You can inspect the contract and view its transaction history (proof of user interactions) on [Stellar Expert](https://stellar.expert/explorer/testnet/contract/CCOVUMBMDAGKILTCU5UW6G3QAIDYYMOHWF6VSRCAODZ25MFBW5BU7I3H).
 
 ---
 
@@ -246,13 +246,13 @@ ChitFund-dApp/
 
 - **Node.js** 18+
 - **npm** 9+ (the repo uses `package-lock.json`)
-- **Rust** 1.74+ with the `wasm32-unknown-unknown` target
+- **Rust** 1.74+ with the `wasm32v1-none` target
   ```bash
-  rustup target add wasm32-unknown-unknown
+  rustup target add wasm32v1-none
   ```
 - **Stellar CLI** for building/deploying the contract
   ```bash
-  cargo install --locked stellar-cli --features opt
+  cargo install --locked stellar-cli
   ```
 - A Stellar testnet wallet — [Freighter](https://www.freighter.app/) (browser), or a WalletConnect-compatible wallet on mobile.
 
@@ -275,7 +275,7 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ```bash
 cd contracts/chit-fund
-cargo build --target wasm32-unknown-unknown --release
+cargo build --target wasm32v1-none --release
 ```
 
 > **Note:** The contract currently has no unit tests. The original `src/test.rs` targeted a pre-multi-fund API and was removed; a new suite covering the multi-fund flow still needs to be written.
@@ -288,7 +288,7 @@ Create `frontend/.env.local` with:
 
 ```bash
 # Required: deployed Soroban contract IDs
-NEXT_PUBLIC_CONTRACT_ID=CCHSYVP3YPWVVUCG6EPS2WTYPF4L6TLRXF4ZS7Z62PIEF5OIQJ36TMTR
+NEXT_PUBLIC_CONTRACT_ID=CCOVUMBMDAGKILTCU5UW6G3QAIDYYMOHWF6VSRCAODZ25MFBW5BU7I3H
 NEXT_PUBLIC_USDC_CONTRACT_ID=CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC
 
 # Optional: defaults shown
@@ -298,6 +298,10 @@ NEXT_PUBLIC_STELLAR_NETWORK_PASSPHRASE=Test SDF Network ; September 2015
 
 # Optional: enables WalletConnect (mobile wallets)
 NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_reown_project_id
+
+# Required: enables cross-device sync and real-time dashboard updates
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
 
 Without `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID`, the app falls back to browser-extension wallets only (Freighter, etc.).
@@ -314,7 +318,7 @@ stellar contract build
 
 # Deploy to testnet (replace <identity> with one of your `stellar keys` aliases)
 stellar contract deploy \
-  --wasm target/wasm32-unknown-unknown/release/chit_fund.wasm \
+  --wasm target/wasm32v1-none/release/chit_fund.wasm \
   --source <identity> \
   --network testnet
 
