@@ -53,7 +53,7 @@ jobs:
             ${{ runner.os }}-cargo-cd-
 
       - name: Install system dependencies
-        run: sudo apt-get update && sudo apt-get install -y libdbus-1-dev pkg-config
+        run: sudo apt-get update && sudo apt-get install -y libdbus-1-dev libudev-dev pkg-config
 
       - name: Install Stellar CLI
         run: cargo install --locked stellar-cli
@@ -91,7 +91,7 @@ jobs:
           targets: wasm32-unknown-unknown
 
       - name: Install system dependencies
-        run: sudo apt-get update && sudo apt-get install -y libdbus-1-dev pkg-config
+        run: sudo apt-get update && sudo apt-get install -y libdbus-1-dev libudev-dev pkg-config
 
       - name: Install Stellar CLI
         run: cargo install --locked stellar-cli
@@ -168,7 +168,7 @@ jobs:
           targets: wasm32-unknown-unknown
 
       - name: Install system dependencies
-        run: sudo apt-get update && sudo apt-get install -y libdbus-1-dev pkg-config
+        run: sudo apt-get update && sudo apt-get install -y libdbus-1-dev libudev-dev pkg-config
 
       - name: Install Stellar CLI
         run: cargo install --locked stellar-cli
